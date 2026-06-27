@@ -23,7 +23,22 @@ const TEMPLATE_OPTIONS: {
   {
     value: "short_drama_studio",
     label: "AI 短剧导演空间",
-    hint: "角色墙 / 分集剧情 / 提示词库（阶段 11 自动生成）",
+    hint: "角色墙 / 分集剧情 / 提示词库，6 个核心模块预置",
+  },
+  {
+    value: "ai_entrepreneur_kb",
+    label: "AI 创业知识库",
+    hint: "赛道分析 / 商业模式 / MVP / 增长 / 工具栈 / 失败案例",
+  },
+  {
+    value: "personal_second_brain",
+    label: "个人第二大脑",
+    hint: "灵感 / 项目 / 决策 / 笔记 / 待办 / 复盘",
+  },
+  {
+    value: "digital_memory_palace",
+    label: "数字记忆宫殿",
+    hint: "书 / 电影 / 人物 / 历史 / 科学 / 哲学",
   },
 ];
 

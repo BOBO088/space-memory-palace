@@ -41,6 +41,21 @@ export function DashboardGrid() {
     setSpaces(all);
   };
 
+  const TEMPLATE_DESCRIPTIONS: Record<SpaceTemplate, string> = {
+    personal_knowledge: "个人 3D 知识空间",
+    short_drama_studio: "AI 短剧导演空间 · 角色墙 + 分集剧情 + 提示词库",
+    ai_entrepreneur_kb: "AI 创业知识库 · 赛道 / 模式 / MVP / 增长 / 工具 / 失败",
+    personal_second_brain: "个人第二大脑 · 灵感 / 项目 / 决策 / 笔记 / 待办 / 复盘",
+    digital_memory_palace: "数字记忆宫殿 · 书 / 电影 / 人 / 历史 / 科学 / 哲学",
+  };
+  const TEMPLATE_HAS_SEED: Record<SpaceTemplate, boolean> = {
+    personal_knowledge: false,
+    short_drama_studio: true,
+    ai_entrepreneur_kb: true,
+    personal_second_brain: true,
+    digital_memory_palace: true,
+  };
+
   const createSpace = async (values: {
     title: string;
     template: SpaceTemplate;
@@ -48,18 +63,17 @@ export function DashboardGrid() {
     const space = await db.createSpace({
       title: values.title,
       template: values.template,
-      description:
-        values.template === "short_drama_studio"
-          ? "AI 短剧导演空间，角色墙 + 分集剧情 + 提示词库"
-          : "个人 3D 知识空间",
+      description: TEMPLATE_DESCRIPTIONS[values.template] ?? "个人 3D 知识空间",
     });
-    if (values.template === "short_drama_studio") {
+    if (TEMPLATE_HAS_SEED[values.template]) {
       const { buildShortDramaSeed } = await import("@/lib/short-drama-seed");
       const seed = buildShortDramaSeed(space);
-      await Promise.all([
-        db.saveHotspots(space.id, seed.hotspots),
-        db.saveCards(space.id, seed.cards),
-      ]);
+      if (seed.hotspots.length) {
+        await Promise.all([
+          db.saveHotspots(space.id, seed.hotspots),
+          db.saveCards(space.id, seed.cards),
+        ]);
+      }
     }
     setSpaces((prev) => [space, ...prev]);
     setCreating(false);
@@ -165,14 +179,23 @@ export function DashboardGrid() {
                 <span
                   className={cn(
                     "inline-flex items-center rounded-full border px-2 py-0.5",
-                    space.template === "short_drama_studio"
-                      ? "border-fuchsia-400/30 bg-fuchsia-400/10 text-fuchsia-200"
-                      : "border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
+                    ({
+                      short_drama_studio: "border-fuchsia-400/30 bg-fuchsia-400/10 text-fuchsia-200",
+                      ai_entrepreneur_kb: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
+                      personal_second_brain: "border-amber-400/30 bg-amber-400/10 text-amber-200",
+                      digital_memory_palace: "border-indigo-400/30 bg-indigo-400/10 text-indigo-200",
+                      personal_knowledge: "border-cyan-400/30 bg-cyan-400/10 text-cyan-200",
+                    } as const)[space.template] ??
+                      "border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
                   )}
                 >
-                  {space.template === "short_drama_studio"
-                    ? "AI 短剧空间"
-                    : "个人知识空间"}
+                  {({
+                    short_drama_studio: "AI 短剧空间",
+                    ai_entrepreneur_kb: "AI 创业知识库",
+                    personal_second_brain: "个人第二大脑",
+                    digital_memory_palace: "数字记忆宫殿",
+                    personal_knowledge: "个人知识空间",
+                  } as const)[space.template] ?? space.template}
                 </span>
                 <span>
                   {space.visibility === "private" ? "私密" : "可分享"}

@@ -18,6 +18,7 @@ import { SpaceViewer } from "@/components/three/SpaceViewer";
 import type { Hotspot, KnowledgeCard, Space } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { db } from "@/lib/db";
+import { getDemoBySlug, isDemoSlug } from "@/lib/demo-spaces";
 
 interface ShareWorkspaceProps {
   spaceId: string;
@@ -34,10 +35,7 @@ export function ShareWorkspace({
   spaceId,
   initialHotspotId,
 }: ShareWorkspaceProps) {
-  const [hydrated, setHydrated] = useState(false);
-  const [space, setSpace] = useState<Space | null>(null);
-  const [hotspots, setHotspots] = useState<Hotspot[]>([]);
-  const [cards, setCards] = useState<KnowledgeCard[]>([]);
+  // (states declared after `isDemo` derivation below)
   const [selectedHotspotId, setSelectedHotspotId] = useState<string | null>(
     initialHotspotId
   );
@@ -47,8 +45,26 @@ export function ShareWorkspace({
   );
   const [mobileCardOpen, setMobileCardOpen] = useState(false);
 
+  // Demos are fully synchronous and self-contained: load them on the
+  // very first render so the share page shows real content even on
+  // the SSR pass (no client hydration delay for the demo URLs).
+  const demoMatch = isDemoSlug(spaceId) ? getDemoBySlug(spaceId) : null;
+  const initialSpace = demoMatch?.space ?? null;
+  const initialHotspots = demoMatch?.hotspots ?? [];
+  const initialCards = demoMatch?.cards ?? [];
+  const [space, setSpace] = useState<Space | null>(initialSpace);
+  const [hotspots, setHotspots] = useState<Hotspot[]>(initialHotspots);
+  const [cards, setCards] = useState<KnowledgeCard[]>(initialCards);
+  const [hydrated, setHydrated] = useState<boolean>(!!demoMatch);
+  const isDemo = !!demoMatch;
+
   useEffect(() => {
     let cancelled = false;
+    // Demo slugs are self-contained and accessible to anyone, on any device.
+    // No localStorage / Supabase lookup required.
+    if (isDemoSlug(spaceId)) {
+      return; // handled synchronously below
+    }
     void (async () => {
       try {
         const found = await db.getSpace(spaceId);
@@ -141,11 +157,19 @@ export function ShareWorkspace({
     );
   }
 
+  // Match the value prop to whichever demo the user opened. For user
+  // spaces (created via the dashboard), default to the catch-all line.
+  const valueProp: string = isDemoSlug(space.id)
+    ? ({
+        "demo-short-drama": "把 3D 空间变成可点击、可讲解的 AI 短剧导演工作台",
+        "demo-entrepreneur": "把创业 0→1 的关键决策，变成 3D 房间里可以点、可以问的卡片",
+        "demo-second-brain": "把你脑子里的 6 类事情，全部挂在 3D 房间的墙上",
+        "demo-memory-palace": "把人类 2500 年的精华，挂在你的 3D 房间里",
+      } as Record<string, string>)[space.id] ?? "把真实空间变成可点击、可讲解的知识宫殿"
+    : space.template === "short_drama_studio"
+      ? "把 3D 空间变成可点击、可讲解的 AI 短剧导演工作台"
+      : "把真实空间变成可点击、可讲解的知识宫殿";
   const isShortDrama = space.template === "short_drama_studio";
-  const valueProp = isShortDrama
-    ? "把 3D 空间变成可点击、可讲解的 AI 短剧导演工作台"
-    : "把真实空间变成可点击、可讲解的知识宫殿";
-
   return (
     <div className="flex h-[calc(100vh-3rem)] w-full flex-col bg-slate-950">
       {/* Top bar: brand + share + CTA. Always visible, compact. */}
@@ -160,7 +184,15 @@ export function ShareWorkspace({
           <span className="hidden sm:inline">Space Memory Palace</span>
         </Link>
         <span className="hidden items-center gap-1 rounded-md border border-white/10 bg-slate-950/60 px-2 py-0.5 text-[11px] text-slate-300 sm:inline-flex">
-          <Lock className="h-3 w-3" /> 分享预览 · 只读
+          {isDemo ? (
+            <>
+              <Share2 className="h-3 w-3" /> 公开示例
+            </>
+          ) : (
+            <>
+              <Lock className="h-3 w-3" /> 分享预览 · 只读
+            </>
+          )}
         </span>
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -187,7 +219,11 @@ export function ShareWorkspace({
         <div className="mx-auto flex max-w-6xl flex-col gap-1">
           <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-cyan-200">
             <span className="h-1 w-1 animate-pulse rounded-full bg-cyan-300" />
-            {isShortDrama ? "AI 短剧导演空间" : "3D 知识空间"}
+            {isDemo
+              ? "公开示例 · 任何人可看"
+              : isShortDrama
+                ? "AI 短剧导演空间"
+                : "3D 知识空间"}
           </span>
           <h1 className="text-2xl font-semibold leading-tight text-slate-50 sm:text-3xl">
             {space.title}

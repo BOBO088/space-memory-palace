@@ -1,7 +1,31 @@
 import Link from "next/link";
 import { ArrowRight, Box, Cpu, Sparkles, Waypoints } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
-import { MOCK_SPACES } from "@/lib/mock-data";
+import { listDemos, type DemoSlug } from "@/lib/demo-spaces";
+import type { SpaceTemplate } from "@/lib/types";
+
+const DEMO_TEMPLATE_BADGE: Record<SpaceTemplate, { label: string; cls: string }> = {
+  short_drama_studio: {
+    label: "AI 短剧空间",
+    cls: "border-fuchsia-400/30 bg-fuchsia-400/10 text-fuchsia-200",
+  },
+  ai_entrepreneur_kb: {
+    label: "AI 创业知识库",
+    cls: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
+  },
+  personal_second_brain: {
+    label: "个人第二大脑",
+    cls: "border-amber-400/30 bg-amber-400/10 text-amber-200",
+  },
+  digital_memory_palace: {
+    label: "数字记忆宫殿",
+    cls: "border-indigo-400/30 bg-indigo-400/10 text-indigo-200",
+  },
+  personal_knowledge: {
+    label: "个人知识空间",
+    cls: "border-cyan-400/30 bg-cyan-400/10 text-cyan-200",
+  },
+};
 
 const features = [
   {
@@ -77,45 +101,58 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
         <div className="mb-4 flex items-end justify-between">
-          <h2 className="text-lg font-semibold text-slate-100">最近的空间</h2>
+          <div>
+            <h2 className="text-lg font-semibold text-slate-100">4 个公开示例</h2>
+            <p className="mt-1 text-xs text-slate-400">
+              点开任何一个，**任何人**都能立刻看到完整价值。不需要登录，不需要本机数据。
+            </p>
+          </div>
           <Link
             href="/dashboard"
             className="text-xs text-slate-400 transition hover:text-cyan-200"
           >
-            查看全部 →
+            我的空间 →
           </Link>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {MOCK_SPACES.slice(0, 3).map((space) => (
-            <Link
-              key={space.id}
-              href={`/space/${space.id}`}
-              className="group relative overflow-hidden rounded-xl border border-white/10 bg-slate-900/40 p-4 transition hover:border-cyan-400/30"
-            >
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fuchsia-400/60 to-transparent" />
-              <div className="mb-2 flex items-center gap-2 text-xs text-slate-400">
-                <span
-                  className={`inline-flex items-center rounded-full border px-2 py-0.5 ${
-                    space.template === "short_drama_studio"
-                      ? "border-fuchsia-400/30 bg-fuchsia-400/10 text-fuchsia-200"
-                      : "border-cyan-400/30 bg-cyan-400/10 text-cyan-200"
-                  }`}
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {listDemos().map(({ slug, space, hotspotCount, valueProp }) => {
+            const meta = DEMO_TEMPLATE_BADGE[space.template];
+            return (
+              <li key={slug}>
+                <Link
+                  href={`/share/${slug}`}
+                  className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-white/10 bg-slate-900/40 p-4 transition hover:border-cyan-400/40"
                 >
-                  {space.template === "short_drama_studio" ? "AI 短剧空间" : "个人知识空间"}
-                </span>
-                <span>{space.visibility === "private" ? "私密" : "可分享"}</span>
-              </div>
-              <h3 className="text-base font-semibold text-slate-100 group-hover:text-cyan-200">
-                {space.title}
-              </h3>
-              <p className="mt-1 line-clamp-2 text-sm text-slate-400">
-                {space.description}
-              </p>
-            </Link>
-          ))}
-        </div>
+                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+                  <div className="mb-2 flex items-center gap-2 text-[11px] text-slate-400">
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2 py-0.5 ${meta.cls}`}
+                    >
+                      {meta.label}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-emerald-200">
+                      · 公开 · {hotspotCount} 热点
+                    </span>
+                  </div>
+                  <h3 className="text-base font-semibold text-slate-100 group-hover:text-cyan-200">
+                    {space.title}
+                  </h3>
+                  <p className="mt-1 line-clamp-2 text-xs text-slate-400">
+                    {space.description}
+                  </p>
+                  <p className="mt-3 line-clamp-2 text-[11px] leading-relaxed text-slate-500">
+                    {valueProp}。
+                  </p>
+                  <div className="mt-auto pt-3 text-[11px] text-cyan-200 opacity-70 transition group-hover:opacity-100">
+                    打开示例 →
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </section>
     </AppShell>
   );

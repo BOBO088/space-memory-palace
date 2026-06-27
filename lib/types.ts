@@ -57,7 +57,12 @@ export interface Hotspot {
   updatedAt: string;
 }
 
-export type SpaceTemplate = "personal_knowledge" | "short_drama_studio";
+export type SpaceTemplate =
+  | "personal_knowledge"
+  | "short_drama_studio"
+  | "ai_entrepreneur_kb"
+  | "personal_second_brain"
+  | "digital_memory_palace";
 
 export type SceneType = "splat" | "glb" | "primitive";
 
