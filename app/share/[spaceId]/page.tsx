@@ -9,14 +9,7 @@ interface PageProps {
 export default async function SharePage({ params, searchParams }: PageProps) {
   const [{ spaceId }, sp] = await Promise.all([params, searchParams]);
   return (
-    <AppShell
-      compact
-      actions={
-        <span className="hidden text-[11px] text-slate-500 sm:inline">
-          分享预览 · 只读
-        </span>
-      }
-    >
+    <AppShell compact>
       <ShareWorkspace spaceId={spaceId} initialHotspotId={sp.hotspot ?? null} />
     </AppShell>
   );

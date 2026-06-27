@@ -488,16 +488,41 @@ function buildHotspotNode(h: Hotspot): THREE.Group {
   sphere.userData.hotspotId = h.id;
   g.add(sphere);
 
+  // Ground-projected ring (the visible aura).
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.18, 0.32, 32),
-    new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, side: THREE.DoubleSide })
+    new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0.55,
+      side: THREE.DoubleSide,
+    })
   );
   ring.rotation.x = -Math.PI / 2;
   ring.position.y = -h.position.y + 0.005;
+  ring.userData.hotspotId = h.id;
   g.add(ring);
+
+  // Invisible hitbox sphere. Raycasting targets this so the entire
+  // visible aura is clickable, not just the small inner sphere.
+  // 0.4m radius matches a comfortable finger-tap target.
+  const hitbox = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, 12, 12),
+    new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+    })
+  );
+  hitbox.userData.hotspotId = h.id;
+  hitbox.renderOrder = 999;
+  hitbox.name = "hotspot-hitbox";
+  g.add(hitbox);
 
   g.userData.sphere = sphere;
   g.userData.ring = ring;
+  g.userData.hitbox = hitbox;
   g.userData.title = h.title;
   return g;
 }

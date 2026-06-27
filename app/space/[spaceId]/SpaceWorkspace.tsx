@@ -245,6 +245,38 @@ export function SpaceWorkspace({ spaceId, mode }: SpaceWorkspaceProps) {
             />
           )}
         </div>
+        {/* Hotspot chip strip: quick navigation without hunting in 3D. */}
+        {hotspots.length > 0 && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center px-3">
+            <div className="pointer-events-auto flex max-w-full gap-1.5 overflow-x-auto rounded-full border border-white/10 bg-slate-950/80 px-2 py-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-xl">
+              {hotspots.map((h) => {
+                const active = h.id === selectedHotspotId;
+                return (
+                  <button
+                    key={h.id}
+                    onClick={() => setSelectedHotspotId(h.id)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] transition",
+                      active
+                        ? "border-cyan-300/70 bg-cyan-400/15 text-cyan-50 shadow-[0_0_14px_rgba(34,211,238,0.45)]"
+                        : "border-white/10 bg-white/5 text-slate-200 hover:border-white/20"
+                    )}
+                    type="button"
+                  >
+                    <span
+                      className="inline-block h-1.5 w-1.5 rounded-full"
+                      style={{
+                        background: h.color,
+                        boxShadow: `0 0 6px ${h.color}`,
+                      }}
+                    />
+                    {h.title}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </section>
       <HotspotPanel
         hotspots={hotspots}
